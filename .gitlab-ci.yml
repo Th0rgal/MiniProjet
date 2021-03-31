@@ -1,0 +1,17 @@
+image: gitlab.u-psud.fr:5050/l1infointrosciencedonnees/computerlab/image:latest
+
+variables:
+  ASSIGNMENT: Semaine3
+  STUDENT: $CI_PROJECT_NAMESPACE # CI_PROJECT_ROOT_NAMESPACE is GitLab 13.2 only
+
+autograde:
+  only:       # Disable automatic CI upon push
+    changes:
+  script:
+    - intro-science-donnees ci_autograde $ASSIGNMENT $STUDENT
+  artifacts:
+    paths:
+      - autograded
+      - feedback
+    # reports:
+    #   junit: feedback/scores.xml

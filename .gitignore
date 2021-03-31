@@ -1,0 +1,7 @@
+feedback
+feedback_generated
+autograded
+.ipynb_checkpoints*.pyc
+__pycache__
+*~
+core*
