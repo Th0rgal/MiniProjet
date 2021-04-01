@@ -20,8 +20,6 @@ from sklearn.model_selection import StratifiedShuffleSplit    # type: ignore
 
 from matplotlib.offsetbox import OffsetImage, AnnotationBbox  # type: ignore
 from matplotlib.figure import Figure                          # type: ignore
-from matplotlib.axes import Axes                              # type: ignore
-from matplotlib.colors import LinearSegmentedColormap         # type: ignore
 
 import seaborn as sns                                         # type: ignore
 
@@ -29,7 +27,7 @@ sns.set()
 warnings.simplefilter(action="ignore", category=FutureWarning)
 
 # Remplacer la ligne suivante par le code adéquat
-raise NotImplementedError("code non implanté ligne 33");
+raise NotImplementedError("code non implanté ligne 31");
 
 
 def transparent_background_filter(
@@ -47,7 +45,7 @@ def transparent_background_filter(
 def redness(img: Image.Image) -> float:
     """Return the redness of a PIL image."""
     # Remplacer la ligne suivante par le code adéquat
-    raise NotImplementedError("code non implanté ligne 51");
+    raise NotImplementedError("code non implanté ligne 49");
 
 
 def elongation(img: Image.Image) -> float:
