@@ -147,15 +147,18 @@ def elongation_plot(img: Image.Image, subplot: Axes) -> None:
     )
 
 
-def mean_amplitude(music) -> float:
-    y,sr = music
-    df = pd.DataFrame(y, columns=['Amplitude'])
-    df.index = [(1/sr)*i for i in range(len(df.index))]
-    return df.mean()
+def mean_amplitude(m) -> float:
+    y,sr = m
+    return y.mean()
+
+def get_tempo(m) -> float:
+    y,sr = m
+    tempo, beat_frames = librosa.beat.beat_track(y=y, sr=sr)
+    return tempo
 
 def load_musics(datadir: str, pattern: str = "*.wav") ->pd.Series:
     paths = sorted(glob.glob(os.path.join(datadir, pattern)))
-    musics = [librosa.load(path, offset=15, duration=3) for path in paths]
+    musics = [librosa.load(path, offset=15, duration=20) for path in paths]
     names = [os.path.basename(path) for path in paths]
     return pd.Series(musics, names)
 
