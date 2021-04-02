@@ -78,13 +78,14 @@ def transparent_background_filter(
     return Image.fromarray(N)
 
 
-def darkness(img: Image.Image)-> float:
+def darkness(img: Image.Image) -> float:
     """Return the darkness of an image"""
     M = np.array(img)
     R = M[:, :, 0] * 1.0
     G = M[:, :, 1] * 1.0
     B = M[:, :, 2] * 1.0
     return np.mean(R + G + B)
+
 
 def redness(img: Image.Image) -> float:
     """Return the redness of a PIL image."""
@@ -336,5 +337,6 @@ def show_source(function: Callable) -> None:
     html = f"<style>{css}</style>{html_code}"
     display(HTML(html))
 
+
 def error_rate(solution, prediction):
-    return np.sum(solution != prediction)/len(solution)
+    return np.sum(solution != prediction) / len(solution)
