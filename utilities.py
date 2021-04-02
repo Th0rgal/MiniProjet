@@ -78,6 +78,14 @@ def transparent_background_filter(
     return Image.fromarray(N)
 
 
+def darkness(img: Image.Image)-> float:
+    """Return the darkness of an image"""
+    M = np.array(img)
+    R = M[:, :, 0] * 1.0
+    G = M[:, :, 1] * 1.0
+    B = M[:, :, 2] * 1.0
+    return np.mean(R + G + B)
+
 def redness(img: Image.Image) -> float:
     """Return the redness of a PIL image."""
     M = np.array(img)
