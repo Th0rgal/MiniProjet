@@ -335,3 +335,6 @@ def show_source(function: Callable) -> None:
     css = formatter.get_style_defs(".pygments")
     html = f"<style>{css}</style>{html_code}"
     display(HTML(html))
+
+def error_rate(solution, prediction):
+    return np.sum(solution != prediction)/len(solution)
