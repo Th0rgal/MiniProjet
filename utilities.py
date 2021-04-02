@@ -22,6 +22,11 @@ from matplotlib.figure import Figure  # type: ignore
 from matplotlib.axes import Axes  # type: ignore
 from matplotlib.colors import LinearSegmentedColormap  # type: ignore
 
+import librosa # for working with audio in python
+import librosa.display # for waveplots, spectograms, etc
+import soundfile as sf # for accessing file information
+import IPython.display as ipd # for playing files within python
+
 import seaborn as sns  # type: ignore
 
 sns.set()
@@ -141,6 +146,18 @@ def elongation_plot(img: Image.Image, subplot: Axes) -> None:
         [C[1], C[1] - a1 * V[1, 1]], [C[0], C[0] - a1 * V[1, 0]], "g-", linewidth=3
     )
 
+
+def mean_amplitude(music) -> float:
+    y,sr = music
+    df = pd.DataFrame(y, columns=['Amplitude'])
+    df.index = [(1/sr)*i for i in range(len(df.index))]
+    return df.mean()
+
+def load_musics(datadir: str, pattern: str = "*.wav") ->pd.Series:
+    paths = sorted(glob.glob(os.path.join(datadir, pattern)))
+    musics = [librosa.load(path, offset=15, duration=3) for path in paths]
+    names = [os.path.basename(path) for path in paths]
+    return pd.Series(musics, names)
 
 def load_images(datadir: str, pattern: str = "*.png") -> pd.Series:
     """
