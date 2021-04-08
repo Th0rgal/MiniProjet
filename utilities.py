@@ -151,14 +151,20 @@ def mean_amplitude(m) -> float:
     y,sr = m
     return y.mean()
 
+### it sucks
 def get_tempo(m) -> float:
     y,sr = m
     tempo, beat_frames = librosa.beat.beat_track(y=y, sr=sr)
     return tempo
 
+def spectral_centroid(m) -> float:
+    y,sr = m
+    cent = librosa.feature.spectral_centroid(y=y, sr=sr)
+    return cent.mean()
+
 def load_musics(datadir: str, pattern: str = "*.wav") ->pd.Series:
     paths = sorted(glob.glob(os.path.join(datadir, pattern)))
-    musics = [librosa.load(path, offset=15, duration=20) for path in paths]
+    musics = [librosa.load(path) for path in paths]
     names = [os.path.basename(path) for path in paths]
     return pd.Series(musics, names)
 
@@ -324,6 +330,92 @@ def make_scatter_plot(
             ax.add_artist(ab)
     else:  # Plot UNLABELED test examples
         f = images[test_index]
+        ax.scatter(x, y, s=250, marker="s", c="c")
+        ax.scatter(x, y, s=100, marker="$?$", c="w")
+
+    if axis == "square":
+        ax.set_aspect("equal", adjustable="box")
+    ax.set_xlim(-2, 2)
+    ax.set_ylim(-2, 2)
+    ax.set_xlabel(f"$x_1$ = {df.columns[0]}")
+    ax.set_ylabel(f"$x_2$ = {df.columns[1]}")
+
+    # Add line on the diagonal
+    if show_diag:
+        ax.plot([-3, 3], [-3, 3], "k--")
+
+    # Add separating line along one of the axes
+    if theta is not None:
+        if feat == 0:  # vertical line
+            ax.plot([theta, theta], [-3, 3], "k--")
+        else:  # horizontal line
+            ax.plot([-3, 3], [theta, theta], "k--")
+
+    return fig
+
+def make_scatter_plot2(
+    df,
+    train_index=[],
+    test_index=[],
+    filter=None,
+    predicted_labels=[],
+    show_diag=False,
+    axis="normal",
+    feat=None,
+    theta=None,
+) -> Figure:
+    """This scatter plot function allows us to show the images.
+
+    predicted_labels can either be:
+                    - None (queries shown as question marks)
+                    - a vector of +-1 predicted values
+                    - the string "GroundTruth" (to display the test images).
+    Other optional arguments:
+            show_diag: add diagonal dashed line if True.
+            feat and theta: add horizontal or vertical line at position theta
+            axis: make axes identical if 'square'."""
+    fruit = np.array(["B", "A"])
+
+    fig = Figure(figsize=(10, 10))
+    ax = fig.add_subplot()
+
+    nsample, nfeat = df.shape
+    if len(train_index) == 0:
+        train_index = range(nsample)
+    # Plot training examples
+    x = df.iloc[train_index, 0]
+    y = df.iloc[train_index, 1]
+    #f = images.iloc[train_index]
+    ax.scatter(x, y, s=750, marker="o", c="w")
+
+    #for x0, y0, img in zip(x, y, f):
+        #ab = AnnotationBbox(OffsetImage(img), (x0, y0), frameon=False)
+        #ax.add_artist(ab)
+
+    # Plot test examples
+    x = df.iloc[test_index, 0]
+    y = df.iloc[test_index, 1]
+
+    if len(predicted_labels) > 0 and not (predicted_labels == "GroundTruth"):
+        label = (predicted_labels + 1) / 2
+        ax.scatter(x, y, s=250, marker="s", color="c")
+        for x0, y0, lbl in zip(x, y, label):
+            ax.text(
+                x0 - 0.03,
+                y0 - 0.03,
+                fruit[int(lbl)],
+                color="w",
+                fontsize=12,
+                weight="bold",
+            )
+    elif predicted_labels == "GroundTruth":
+        #f = images.iloc[test_index]
+        ax.scatter(x, y, s=500, marker="s", color="c")
+        #for x0, y0, img in zip(x, y, f):
+        #    ab = AnnotationBbox(OffsetImage(img), (x0, y0), frameon=False)
+        #    ax.add_artist(ab)
+    else:  # Plot UNLABELED test examples
+        #f = images[test_index]
         ax.scatter(x, y, s=250, marker="s", c="c")
         ax.scatter(x, y, s=100, marker="$?$", c="w")
 
