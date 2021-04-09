@@ -440,10 +440,10 @@ def get_tempo(m) -> float:
 
 def spectral_centroid_median(m) -> float:
     cent = spect_cent(m)
-    return cent.median()
+    return cent.mean()
 
 def load_musics(datadir: str, pattern: str = "*.wav") ->pd.Series:
-    paths = s&orted(glob.glob(os.path.join(datadir, pattern)))
-    musics = [librosa.load(path) for path in paths]
+    paths = sorted(glob.glob(os.path.join(datadir, pattern)))
+    musics = [librosa.load(path, offset=15, duration=45) for path in paths]
     names = [os.path.basename(path) for path in paths]
     return pd.Series(musics, names)
