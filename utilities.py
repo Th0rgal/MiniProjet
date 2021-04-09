@@ -147,27 +147,6 @@ def elongation_plot(img: Image.Image, subplot: Axes) -> None:
     )
 
 
-def mean_amplitude(m) -> float:
-    y,sr = m
-    return y.mean()
-
-### it sucks
-def get_tempo(m) -> float:
-    y,sr = m
-    tempo, beat_frames = librosa.beat.beat_track(y=y, sr=sr)
-    return tempo
-
-def spectral_centroid(m) -> float:
-    y,sr = m
-    cent = librosa.feature.spectral_centroid(y=y, sr=sr)
-    return cent.mean()
-
-def load_musics(datadir: str, pattern: str = "*.wav") ->pd.Series:
-    paths = sorted(glob.glob(os.path.join(datadir, pattern)))
-    musics = [librosa.load(path) for path in paths]
-    names = [os.path.basename(path) for path in paths]
-    return pd.Series(musics, names)
-
 def load_images(datadir: str, pattern: str = "*.png") -> pd.Series:
     """
     Return all the images in `datadir` whose name match the pattern
@@ -413,3 +392,58 @@ def show_source(function: Callable) -> None:
 
 def error_rate(solution, prediction):
     return np.sum(solution != prediction) / len(solution)
+
+def plt_compare(musics, f, ax=None):
+    if not ax:
+        fig = Figure()
+        ax = fig.add_subplot(1, 1, 1)
+    for idx, music in enumerate(musics):
+        name = musics.index[idx]
+        if name[0] == 'a':
+            color = 'red'
+        else:
+            color = 'blue'
+        x = np.linspace(0, 3, 2)
+        ax.plot(x, [f(music)] * 2, color=color, linewidth=0.7)
+    if not ax:
+        return (fig)
+
+def plt_compare2(musics, f):
+    fig = Figure(figsize=(30, 24))
+    for idx, music in enumerate(musics):
+        name = musics.index[idx]
+        if name[0] == 'a':
+            color = 'red'
+        else:
+            color = 'blue'
+        ax = fig.add_subplot(4, 5, idx + 1)
+        y = f(music)
+        x = np.linspace(0, 3, len(y))
+        ax.plot(x, y, color=color, linewidth=0.5)
+    return (fig)
+    
+def spect_cent(m):
+    y,sr = m
+    cent = librosa.feature.spectral_centroid(y=y, sr=sr)
+    cent = cent.reshape(len(cent[0]))
+    return cent
+
+def mean_amplitude(m) -> float:
+    y,sr = m
+    return y.mean()
+
+### it sucks
+def get_tempo(m) -> float:
+    y,sr = m
+    tempo, beat_frames = librosa.beat.beat_track(y=y, sr=sr)
+    return tempo
+
+def spectral_centroid_median(m) -> float:
+    cent = spect_cent(m)
+    return cent.median()
+
+def load_musics(datadir: str, pattern: str = "*.wav") ->pd.Series:
+    paths = s&orted(glob.glob(os.path.join(datadir, pattern)))
+    musics = [librosa.load(path) for path in paths]
+    names = [os.path.basename(path) for path in paths]
+    return pd.Series(musics, names)
