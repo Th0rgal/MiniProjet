@@ -5,6 +5,8 @@ import os
 import math
 from typing import Callable, List, Optional, Iterable, Union
 import warnings
+import itertools
+from os import walk
 
 from pygments import highlight  # type: ignore
 from pygments.lexers import PythonLexer  # type: ignore
@@ -380,6 +382,37 @@ def make_scatter_plot2(
     return fig
 
 
+def make_scatter_plot3(df):
+    happy = df[df["classe"] == 1]
+    sad = df[df["classe"] == -1]
+    nsample, nfeat = happy.shape
+
+    perm = list(itertools.combinations(range(nfeat - 1), 2))
+
+    row = (len(perm) // 5)
+    fig = Figure(figsize=(30, 6 * (row + 1)))
+
+    for idx, (a, b) in enumerate(perm):
+
+        ax = fig.add_subplot(row + 1, 5, idx + 1)
+
+        x = happy.iloc[range(nsample), a]
+        y = happy.iloc[range(nsample), b]
+        ax.scatter(x, y, marker="o", c="r")
+
+        x = sad.iloc[range(nsample), a]
+        y = sad.iloc[range(nsample), b]
+        ax.scatter(x, y, marker="o", c="b")
+
+        ax.set_aspect("equal", adjustable="box")
+        ax.set_xlim(-2, 2)
+        ax.set_ylim(-2, 2)
+        ax.set_xlabel(f"$x_1$ = {df.columns[a]}")
+        ax.set_ylabel(f"$x_2$ = {df.columns[b]}")
+    return fig
+
+
+
 def show_source(function: Callable) -> None:
     code = inspect.getsource(function)
     lexer = PythonLexer()
@@ -442,8 +475,36 @@ def spectral_centroid_median(m) -> float:
     cent = spect_cent(m)
     return cent.mean()
 
+def amplitude_std(m) -> float:
+    y, sr = m
+    return np.std(y)
+
+def spectral_centroid_std(m):
+    cent = spect_cent(m)
+    return np.std(cent)
+
+def chroma_stft(m):
+    y, sr = m
+    y = librosa.effects.harmonic(y)
+    tonnetz = librosa.feature.tonnetz(y=y, sr=sr)
+    return np.median(tonnetz)
+
 def load_musics(datadir: str, pattern: str = "*.wav") ->pd.Series:
     paths = sorted(glob.glob(os.path.join(datadir, pattern)))
     musics = [librosa.load(path, offset=15, duration=45) for path in paths]
     names = [os.path.basename(path) for path in paths]
     return pd.Series(musics, names)
+
+def load_music_from_ytb(link):
+    mypath = "./"
+    os.system("youtube-dl --audio-format wav --extract-audio " + link)
+    vidID = link.split("=")[1]
+
+    f = []
+    for  dirpath, dirnames, filenames in walk(mypath):
+        f.extend(filenames)
+    for i in range(0, len(f)):
+        if ".wav" in f[i] and vidID in f[i]:
+            os.rename(f[i], "test_music.wav")
+    music = librosa.load("test_music.wav")
+    return music
