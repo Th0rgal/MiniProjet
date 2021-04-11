@@ -497,7 +497,7 @@ def load_musics(datadir: str, pattern: str = "*.wav") ->pd.Series:
 
 def load_music_from_ytb(link):
     mypath = "./"
-    os.system("youtube-dl --audio-format wav --extract-audio " + link)
+    os.system("./youtube-dl --audio-format wav --extract-audio " + link)
     vidID = link.split("=")[1]
 
     f = []
