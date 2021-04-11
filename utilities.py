@@ -24,10 +24,10 @@ from matplotlib.figure import Figure  # type: ignore
 from matplotlib.axes import Axes  # type: ignore
 from matplotlib.colors import LinearSegmentedColormap  # type: ignore
 
-import librosa # for working with audio in python
-import librosa.display # for waveplots, spectograms, etc
-import soundfile as sf # for accessing file information
-import IPython.display as ipd # for playing files within python
+import librosa  # for working with audio in python
+import librosa.display  # for waveplots, spectograms, etc
+import soundfile as sf  # for accessing file information
+import IPython.display as ipd  # for playing files within python
 
 import seaborn as sns  # type: ignore
 
@@ -334,12 +334,9 @@ def make_scatter_plot(
 
     return fig
 
+
 def make_scatter_plot2(
-    df,
-    train_index=[],
-    test_index=[],
-    show_diag=False,
-    axis="normal",
+    df, train_index=[], test_index=[], show_diag=False, axis="normal",
 ) -> Figure:
     """This scatter plot function allows us to show the images.
 
@@ -360,7 +357,6 @@ def make_scatter_plot2(
     x = happy.iloc[range(nsample), 0]
     y = happy.iloc[range(nsample), 1]
     ax.scatter(x, y, s=750, marker="o", c="r")
-
 
     # Plot sad songs
     nsample, nfeat = sad.shape
@@ -389,7 +385,7 @@ def make_scatter_plot3(df):
 
     perm = list(itertools.combinations(range(nfeat - 1), 2))
 
-    row = (len(perm) // 5)
+    row = len(perm) // 5
     fig = Figure(figsize=(30, 6 * (row + 1)))
 
     for idx, (a, b) in enumerate(perm):
@@ -412,7 +408,6 @@ def make_scatter_plot3(df):
     return fig
 
 
-
 def show_source(function: Callable) -> None:
     code = inspect.getsource(function)
     lexer = PythonLexer()
@@ -426,62 +421,71 @@ def show_source(function: Callable) -> None:
 def error_rate(solution, prediction):
     return np.sum(solution != prediction) / len(solution)
 
+
 def plt_compare(musics, f, ax=None):
     if not ax:
         fig = Figure()
         ax = fig.add_subplot(1, 1, 1)
     for idx, music in enumerate(musics):
         name = musics.index[idx]
-        if name[0] == 'a':
-            color = 'red'
+        if name[0] == "a":
+            color = "red"
         else:
-            color = 'blue'
+            color = "blue"
         x = np.linspace(0, 3, 2)
         ax.plot(x, [f(music)] * 2, color=color, linewidth=0.7)
     if not ax:
-        return (fig)
+        return fig
+
 
 def plt_compare2(musics, f):
     fig = Figure(figsize=(30, 24))
     for idx, music in enumerate(musics):
         name = musics.index[idx]
-        if name[0] == 'a':
-            color = 'red'
+        if name[0] == "a":
+            color = "red"
         else:
-            color = 'blue'
+            color = "blue"
         ax = fig.add_subplot(4, 5, idx + 1)
         y = f(music)
-        x = np.linspace(0, 3, len(y))
+        x = np.linspace(0, 40, len(y))
         ax.plot(x, y, color=color, linewidth=0.5)
-    return (fig)
-    
+    return fig
+
+
 def spect_cent(m):
-    y,sr = m
+    y, sr = m
     cent = librosa.feature.spectral_centroid(y=y, sr=sr)
     cent = cent.reshape(len(cent[0]))
     return cent
 
+
 def mean_amplitude(m) -> float:
-    y,sr = m
+    y, sr = m
     return y.mean()
+
 
 ### it sucks
 def get_tempo(m) -> float:
-    y,sr = m
+    y, sr = m
     tempo, beat_frames = librosa.beat.beat_track(y=y, sr=sr)
     return tempo
 
-def spectral_centroid_median(m) -> float:
+
+def spectral_centroid_mean(m) -> float:
     cent = spect_cent(m)
     return cent.mean()
+
 
 def amplitude_std(m) -> float:
     y, sr = m
     return np.std(y)
 
+
 def spectral_centroid_std(m):
     cent = spect_cent(m)
     return np.std(cent)
+
 
 def chroma_stft(m):
     y, sr = m
@@ -489,11 +493,13 @@ def chroma_stft(m):
     tonnetz = librosa.feature.tonnetz(y=y, sr=sr)
     return np.median(tonnetz)
 
-def load_musics(datadir: str, pattern: str = "*.wav") ->pd.Series:
+
+def load_musics(datadir: str, pattern: str = "*.wav") -> pd.Series:
     paths = sorted(glob.glob(os.path.join(datadir, pattern)))
     musics = [librosa.load(path, offset=15, duration=45) for path in paths]
     names = [os.path.basename(path) for path in paths]
     return pd.Series(musics, names)
+
 
 def load_music_from_ytb(link):
     mypath = "./"
@@ -501,7 +507,7 @@ def load_music_from_ytb(link):
     vidID = link.split("=")[1]
 
     f = []
-    for  dirpath, dirnames, filenames in walk(mypath):
+    for dirpath, dirnames, filenames in walk(mypath):
         f.extend(filenames)
     for i in range(0, len(f)):
         if ".wav" in f[i] and vidID in f[i]:
