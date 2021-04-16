@@ -18,6 +18,7 @@ import numpy as np
 import pandas as pd  # type: ignore
 
 from sklearn.model_selection import StratifiedShuffleSplit  # type: ignore
+from sklearn.neighbors import KNeighborsClassifier
 
 from matplotlib.offsetbox import OffsetImage, AnnotationBbox  # type: ignore
 from matplotlib.figure import Figure  # type: ignore
@@ -505,12 +506,36 @@ def load_music_from_ytb(link):
     mypath = "./"
     os.system("./youtube-dl --audio-format wav --extract-audio " + link)
     vidID = link.split("=")[1]
-
     f = []
     for dirpath, dirnames, filenames in walk(mypath):
         f.extend(filenames)
     for i in range(0, len(f)):
         if ".wav" in f[i] and vidID in f[i]:
             os.rename(f[i], "test_music.wav")
+            break
+    name = f[i]
+    name = name[:name.find(vidID) - 1]
     music = librosa.load("test_music.wav")
-    return music
+    return (pd.Series([music], [name]))
+
+
+def guessHappiness(m, df, neigh):
+    dfT = pd.DataFrame({
+        'spectral_centroid' : m.apply(spectral_centroid_mean),
+        'tempo' : m.apply(get_tempo),
+        'name' : m.index.map(lambda name: name if name[0] == 'a' else name),
+    })
+
+    dfstd = dfT
+    dfstd = (dfT - df.mean()) / df.std()
+
+    X = dfstd[['spectral_centroid', 'tempo']]
+    NAME = dfT['name']
+
+    Ytest_predicted = neigh.predict(X)
+
+    print(f"La musique {NAME[0]} est: ", end="")
+    if (Ytest_predicted[0] == 1):
+        print ("Heureuse")
+    else:
+        print ("Triste")
