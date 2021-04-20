@@ -514,53 +514,55 @@ def load_music_from_ytb(link):
             os.rename(f[i], "test_music.wav")
             break
     name = f[i]
-    name = name[:name.find(vidID) - 1]
+    name = name[: name.find(vidID) - 1]
     music = librosa.load("test_music.wav")
-    return (pd.Series([music], [name]))
+    return pd.Series([music], [name])
 
 
 def guessHappiness(m, df, neigh):
-    dfT = pd.DataFrame({
-        'spectral_centroid' : m.apply(spectral_centroid_mean),
-        'tempo' : m.apply(get_tempo),
-        'name' : m.index.map(lambda name: name if name[0] == 'a' else name),
-    })
+    dfT = pd.DataFrame(
+        {
+            "spectral_centroid": m.apply(spectral_centroid_mean),
+            "tempo": m.apply(get_tempo),
+            "name": m.index.map(lambda name: name if name[0] == "a" else name),
+        }
+    )
 
     dfstd = dfT
     dfstd = (dfT - df.mean()) / df.std()
 
-    X = dfstd[['spectral_centroid', 'tempo']]
-    NAME = dfT['name']
+    X = dfstd[["spectral_centroid", "tempo"]]
+    NAME = dfT["name"]
 
     Ytest_predicted = neigh.predict(X)
 
     print(f"La musique {NAME[0]} est: ", end="")
-    if (Ytest_predicted[0] == 1):
-        print ("Heureuse")
+    if Ytest_predicted[0] == 1:
+        print("Heureuse")
     else:
-        print ("Triste")
+        print("Triste")
 
 
-class oneR():
+class oneR:
     def __init__(self):
-        '''
+        """
         This constructor is supposed to initialize data members.
         Use triple quotes for function documentation. 
-        '''
-        self.is_trained = False  
-        self.ig = 0     # Index of the good feature G
-        self.w = 1      # Feature polarity
+        """
+        self.is_trained = False
+        self.ig = 0  # Index of the good feature G
+        self.w = 1  # Feature polarity
         self.theta = 0  # Threshold on the good feature
 
     def fit(self, X, Y):
-        '''
+        """
         This function should train the model parameters.
         
         Args:
             X: Training data matrix of dim num_train_samples * num_feat.
             Y: Training label matrix of dim num_train_samples * 1.
         Both inputs are panda dataframes.
-        '''
+        """
         # Compute correlations
         matrix = X.copy()
         matrix["output"] = Y.copy()
@@ -568,10 +570,9 @@ class oneR():
         del correlations["output"]
         # Select the most correlated feature in absolute value using the last line,
         # and store it in self.ig
-        for i in range(1, len(correlations)): # support n >= 1 checks
+        for i in range(1, len(correlations)):  # support n >= 1 checks
             if abs(correlations.iloc[i]) > abs(correlations.iloc[self.ig]):
                 self.ig = i
-
 
         # Get feature polarity and store it in self.w
         # YOUR CODE HERE
@@ -580,44 +581,45 @@ class oneR():
         G = X.iloc[:, self.ig] * self.w
         # Compute the threshold as a mid-point between cluster centers
         self.theta = G.median()
- 
-        self.is_trained=True
+
+        self.is_trained = True
 
     def predict(self, X):
-        '''
+        """
         This function should provide predictions of labels on (test) data.
         
         Args:
             X: Test data matrix of dim num_test_samples * num_feat.
         Return:
             Y: Predicted label matrix of dim num_test_samples * 1.
-        '''
+        """
         # Fetch the feature of interest and multiply by polarity
-        G = X.iloc[:,self.ig] * self.w
+        G = X.iloc[:, self.ig] * self.w
         # Make decisions according to threshold
         Y = G.copy()
         Y[G < self.theta] = -1
         Y[G >= self.theta] = 1
-              
+
         return Y
 
-class NNClassifier():
+
+class NNClassifier:
     def __init__(self):
-        '''
+        """
         This constructor is supposed to initialize data members.
         Use triple quotes for function documentation. 
-        '''
+        """
         self.is_trained = False
         self.space = np.empty(0)
 
     def fit(self, X, Y):
-        '''
+        """
         This function should train the model parameters.
         Args:
             X: Training data matrix of dim num_train_samples * num_feat.
             Y: Training label matrix of dim num_train_samples * 1.
         Both inputs are panda dataframes.
-        '''
+        """
         self.space = np.empty((len(X), len(X.iloc[0])))
         self.labels = Y
         for j, feature_label in enumerate(X):
@@ -626,10 +628,10 @@ class NNClassifier():
         self.is_trained = True
 
     def distance(self, x, y):
-        return np.sqrt( np.sum((x-y)**2) )
+        return np.sqrt(np.sum((x - y) ** 2))
+
 
 class FNNClassifier(NNClassifier):
-
     def predict(self, X):
         matrix = X.T
         output = np.empty(len(X))
@@ -643,13 +645,13 @@ class FNNClassifier(NNClassifier):
                     output[i] = self.labels[j]
         return output
 
-class KNNClassifier(NNClassifier):
 
+class KNNClassifier(NNClassifier):
     def __init__(self, k=3):
-        '''
+        """
         This constructor is supposed to initialize data members.
         Use triple quotes for function documentation. 
-        '''
+        """
         self.k = k
         super().__init__()
 
@@ -667,14 +669,14 @@ class KNNClassifier(NNClassifier):
         pre_output = np.empty((len(X), self.k))
         for i, value_name in enumerate(matrix):
             value = np.array(matrix[value_name])
-            best_distances = np.ones(self.k)*(-1)
+            best_distances = np.ones(self.k) * (-1)
             for j, space_value in enumerate(self.space):
                 id_max = self.id_max(best_distances)
                 distance = self.distance(value, space_value)
                 if best_distances[id_max] == -1 or distance < best_distances[id_max]:
                     best_distances[id_max] = distance
                     pre_output[i, id_max] = self.labels[j]
-        
+
         output = np.empty(len(X))
         for i, results in enumerate(pre_output):
             # thx stackoverflow: https://stackoverflow.com/a/28736715/10144963
