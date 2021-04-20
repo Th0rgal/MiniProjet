@@ -18,7 +18,7 @@ import numpy as np
 import pandas as pd  # type: ignore
 
 from sklearn.model_selection import StratifiedShuffleSplit  # type: ignore
-from sklearn.neighbors import KNeighborsClassifier
+
 
 from matplotlib.offsetbox import OffsetImage, AnnotationBbox  # type: ignore
 from matplotlib.figure import Figure  # type: ignore
@@ -27,8 +27,7 @@ from matplotlib.colors import LinearSegmentedColormap  # type: ignore
 
 import librosa  # for working with audio in python
 import librosa.display  # for waveplots, spectograms, etc
-import soundfile as sf  # for accessing file information
-import IPython.display as ipd  # for playing files within python
+
 
 import seaborn as sns  # type: ignore
 
@@ -345,7 +344,6 @@ def make_scatter_plot2(
             show_diag: add diagonal dashed line if True.
             feat and theta: add horizontal or vertical line at position theta
             axis: make axes identical if 'square'."""
-    fruit = np.array(["B", "A"])
 
     fig = Figure(figsize=(10, 10))
     ax = fig.add_subplot()
@@ -547,7 +545,7 @@ class oneR:
     def __init__(self):
         """
         This constructor is supposed to initialize data members.
-        Use triple quotes for function documentation. 
+        Use triple quotes for function documentation.
         """
         self.is_trained = False
         self.ig = 0  # Index of the good feature G
@@ -557,7 +555,7 @@ class oneR:
     def fit(self, X, Y):
         """
         This function should train the model parameters.
-        
+
         Args:
             X: Training data matrix of dim num_train_samples * num_feat.
             Y: Training label matrix of dim num_train_samples * 1.
@@ -587,7 +585,7 @@ class oneR:
     def predict(self, X):
         """
         This function should provide predictions of labels on (test) data.
-        
+
         Args:
             X: Test data matrix of dim num_test_samples * num_feat.
         Return:
@@ -607,7 +605,7 @@ class NNClassifier:
     def __init__(self):
         """
         This constructor is supposed to initialize data members.
-        Use triple quotes for function documentation. 
+        Use triple quotes for function documentation.
         """
         self.is_trained = False
         self.space = np.empty(0)
@@ -650,7 +648,7 @@ class KNNClassifier(NNClassifier):
     def __init__(self, k=3):
         """
         This constructor is supposed to initialize data members.
-        Use triple quotes for function documentation. 
+        Use triple quotes for function documentation.
         """
         self.k = k
         super().__init__()
@@ -683,5 +681,82 @@ class KNNClassifier(NNClassifier):
             values, counts = np.unique(results, return_counts=True)
             ind = np.argmax(counts)
             output[i] = values[ind]  # prints the most frequent element
+
+        return output
+
+
+class RadiusNNClassifier:
+    def __init__(self, radius=0, backup_classifier=None):
+        """
+        This constructor is supposed to initialize data members.
+        Use triple quotes for function documentation.
+        """
+        self.is_trained = False
+        self.space = np.empty(0)
+        self.radius = radius
+        if backup_classifier is None:
+            self.backup = KNNClassifier(k=3)
+
+    def distance(self, x, y):
+        return np.sqrt(np.sum((x - y) ** 2))
+
+    def fit(self, X, Y):
+        """
+        This function should train the model parameters.
+        Args:
+            X: Training data matrix of dim num_train_samples * num_feat.
+            Y: Training label matrix of dim num_train_samples * 1.
+        Both inputs are panda dataframes.
+        """
+        self.space = np.empty((len(X), len(X.iloc[0])))
+        self.labels = Y
+        for j, feature_label in enumerate(X):
+            for i, value in enumerate(X[feature_label]):
+                self.space[i, j] = value
+
+        if self.radius == 0:
+            optimal_distance = -1
+            for i in range(len(self.space)):
+                # trouver la distance minimale avec un bad_label
+                good_label = self.labels[i]
+                distance = -1
+                for j in range(len(self.space)):
+                    if self.labels[j] != good_label:
+                        new_distance = self.distance(self.space[i], self.space[j])
+                        if distance == -1 or new_distance < distance:
+                            distance = new_distance
+                if optimal_distance == -1 or distance < optimal_distance:
+                    optimal_distance = distance
+
+        # réduire cette distance de 1%
+        self.backup.fit(X, Y)
+        self.radius = optimal_distance * 0.99
+        self.is_trained = True
+
+    def predict(self, X):
+        matrix = X.T
+        pre_output = []
+        for i, value_name in enumerate(matrix):
+            value = np.array(matrix[value_name])  # coordinates to evaluate
+            results = []
+            for j, space_value in enumerate(self.space):
+                if self.distance(self.space[j], value) < self.radius:
+                    results.append(self.labels[j])
+            pre_output.append(results)
+
+        output = np.empty(len(X))
+        for i, results in enumerate(pre_output):
+            # thx stackoverflow: https://stackoverflow.com/a/28736715/10144963
+            if len(results) > 0:
+                values, counts = np.unique(results, return_counts=True)
+                ind = np.argmax(counts)
+                output[i] = values[ind]
+            else:
+                output[i] = 0  # not found
+
+        Y = self.backup.predict(X)
+        for i, value in enumerate(output):
+            if value == 0:
+                output[i] = Y[i]
 
         return output
